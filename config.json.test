@@ -8,5 +8,6 @@
 	    	database : 'myapp_test',
 	    	charset  : 'utf8'
 	  }
-	}
+	} ,
+	"token": ["token"]
 }

@@ -4,9 +4,13 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var router = express.Router();
 
+var config = require('./config');
 var index = require('./routes/index');
 var users = require('./routes/users');
+var mvp = require('./routes/mvp');
+var history = require('./routes/history');
 
 var app = express();
 
@@ -22,25 +26,46 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+router.use(function (req, res, next) {
+
+	if (!req.headers['x-auth-token'] && req.method == 'POST') {
+		return ret403(res);
+	} else {
+		if (config.token.indexOf(req.headers['x-auth-token']) == -1) {
+			return ret403(res);
+		}
+	}
+	next();
+});
+
+app.use(router);
 app.use('/', index);
 app.use('/users', users);
+app.use('/api/mvp', mvp);
+app.use('/api/history', history);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+	var err = new Error('Not Found');
+	err.status = 404;
+	next(err);
 });
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+	// set locals, only providing error in development
+	res.locals.message = err.message;
+	res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+	// render the error page
+	res.status(err.status || 500);
+	res.render('error');
 });
 
+function ret403(res) {
+	return res.status(403).send({ 
+		success: false, 
+		message: 'No token provided.' 
+	});
+}
 module.exports = app;
