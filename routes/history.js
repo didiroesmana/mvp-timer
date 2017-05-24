@@ -4,7 +4,7 @@ var MvpHistory = require('../models/MvpHistory');
 
 /* GET History listing. */
 router.get('/', function(req, res, next) {
-	MvpHistory.fetchAll().then(function(results){
+	MvpHistory.findAll([],{withRelated:['mvp']}).then(function(results){
 	  	res.send(results.toJSON());
   	});
 });

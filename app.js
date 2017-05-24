@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var cors=require('cors');
 var router = express.Router();
 
 var config = require('./config');
@@ -20,6 +21,7 @@ app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(cors());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -29,12 +31,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 router.use(function (req, res, next) {
 
 	if (!req.headers['x-auth-token'] && req.method == 'POST') {
-		return ret403(res);
-	} else {
-		if (config.token.indexOf(req.headers['x-auth-token']) == -1) {
-			return ret403(res);
-		}
+		return ret403(res,'No token provided.');
+	} else if (req.headers['x-auth-token'] && config.token.indexOf(req.headers['x-auth-token']) == -1) {
+		return ret403(res,'Wrong token given');
 	}
+
 	next();
 });
 
@@ -62,10 +63,10 @@ app.use(function(err, req, res, next) {
 	res.render('error');
 });
 
-function ret403(res) {
+function ret403(res,message) {
 	return res.status(403).send({ 
 		success: false, 
-		message: 'No token provided.' 
+		message: message 
 	});
 }
 module.exports = app;
